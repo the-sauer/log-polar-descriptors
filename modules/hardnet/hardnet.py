@@ -35,6 +35,7 @@ from modules.ptn.pytorch.data import transformerData, \
     transformerValTestData, \
     TripletPhotoTour, \
     Augmentor
+from modules.ptn.pytorch.blobinator_dataset import BlobinatorDataset
 from modules.hardnet.loggers import Logger, FileLogger
 from modules.hardnet.losses import loss_HardNet_weighted
 from modules.hardnet.models import HardNet
@@ -86,7 +87,7 @@ def create_train_loader(cfg, sequences):
         'pin_memory': cfg.TRAINING.PIN_MEMORY
     } if not cfg.TRAINING.NO_CUDA else {}
 
-    transformer_dataset = transformerData(cfg, sequences=sequences)
+    transformer_dataset = BlobinatorDataset(cfg)
     train_loader = torch.utils.data.DataLoader(
         transformer_dataset,
         batch_size=cfg.TRAINING.BATCH_SIZE,
@@ -103,9 +104,7 @@ def create_test_loaders(padTo):
         'pin_memory': cfg.TRAINING.PIN_MEMORY
     } if not cfg.TRAINING.NO_CUDA else {}
 
-    transformer_dataset = transformerValTestData(cfg,
-                                                 is_test=False,
-                                                 test_name=None)
+    transformer_dataset = BlobinatorDataset(cfg)
     val_loaders = [{
         'name':
         'multiple_sequences_validation',
