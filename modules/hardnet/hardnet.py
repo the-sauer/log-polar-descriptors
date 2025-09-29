@@ -35,7 +35,7 @@ from modules.ptn.pytorch.data import transformerData, \
     transformerValTestData, \
     TripletPhotoTour, \
     Augmentor
-from modules.ptn.pytorch.blobinator_dataset import BlobinatorDataset
+from modules.ptn.pytorch.blobinator_dataset import BlobinatorTrainDataset, BlobinatorTestDataset
 from modules.hardnet.loggers import Logger, FileLogger
 from modules.hardnet.losses import loss_HardNet_weighted
 from modules.hardnet.models import HardNet
@@ -87,7 +87,7 @@ def create_train_loader(cfg, sequences):
         'pin_memory': cfg.TRAINING.PIN_MEMORY
     } if not cfg.TRAINING.NO_CUDA else {}
 
-    transformer_dataset = BlobinatorDataset(cfg)
+    transformer_dataset = BlobinatorTrainDataset(cfg)
     train_loader = torch.utils.data.DataLoader(
         transformer_dataset,
         batch_size=cfg.TRAINING.BATCH_SIZE,
@@ -104,7 +104,7 @@ def create_test_loaders(padTo):
         'pin_memory': cfg.TRAINING.PIN_MEMORY
     } if not cfg.TRAINING.NO_CUDA else {}
 
-    transformer_dataset = BlobinatorDataset(cfg)
+    transformer_dataset = BlobinatorTestDataset(cfg)
     val_loaders = [{
         'name':
         'multiple_sequences_validation',
@@ -315,14 +315,14 @@ def test(cfg, test_loader, model, augm, epoch, logger, logger_test_name):
         img_a = data[0].to(device) if not imgIDs_a else dict(
             zip(imgIDs_a, data[0]["img"]))  # create dictionary of images
         theta_a = None if patchwise else [
-            theta.float().to(device) for theta in data[2][0:-1]
+            theta.float().to(device) for theta in data[2]#[0:-1]
         ]
 
         imgIDs_p = None if patchwise else data[5]
         img_p = data[1].to(device) if not imgIDs_p else dict(
             zip(imgIDs_p, data[1]["img"]))  # create dictionary of images
         theta_p = None if patchwise else [
-            theta.float().to(device) for theta in data[3][0:-1]
+            theta.float().to(device) for theta in data[3]#[0:-1]
         ]
 
         # get scale correction factor, orientation correction constant and check whether the second keypoint

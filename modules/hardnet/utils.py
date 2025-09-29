@@ -57,7 +57,7 @@ def show_images(images, file_to_save, cols=1, titles=None):
         titles = ['Image (%d)' % i for i in range(1, n_images + 1)]
     fig = plt.figure()
     for n, (image, title) in enumerate(zip(images, titles)):
-        a = fig.add_subplot(cols, np.ceil(n_images / float(cols)), n + 1)
+        a = fig.add_subplot(cols, int(np.ceil(n_images / float(cols))), n + 1)
         if image.ndim == 2:
             plt.gray()
         plt.imshow(image)

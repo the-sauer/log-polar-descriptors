@@ -19,7 +19,7 @@ class ImageWrapper(TypedDict):
 Keypoint: TypeAlias = tuple[np.ndarray, float, float]
 
 
-class BlobinatorDataset(torch.utils.data.IterableDataset):
+class BlobinatorDataset(torch.utils.data.Dataset):
     """
     This is the Blobinator dataset.
 
@@ -56,40 +56,7 @@ class BlobinatorDataset(torch.utils.data.IterableDataset):
             )
         )
         self.backgrounds: np.ndarray = np.zeros(shape=(256, self.cfg.TRAINING.PAD_TO, self.cfg.TRAINING.PAD_TO))
-
-    def __iter__(self) -> Generator[tuple[
-        ImageWrapper,
-        ImageWrapper,
-        Keypoint,
-        Keypoint,
-        str,
-        str,
-        float,
-        float
-    ]]:
-        for i, background in enumerate(self.backgrounds):
-            transform = self.generate_homography()
-            mapped_image = self.map_blobs(background, transform)
-            mapped_keypoints = self.map_keypoints(transform)
-            for k, k_mapped in zip(self.keypoints, mapped_keypoints):
-                yield (
-                    {
-                        "img": self.blob_sheet,
-                        "padLeft": self.blob_sheet_pad_left,
-                        "padUp": self.blob_sheet_pad_up
-                    },
-                    {
-                        "img": mapped_image,
-                        "padLeft": 0,
-                        "padUp": 0
-                    },
-                    (k[0], k[1], k[2]),
-                    (k_mapped[0], k_mapped[1], k_mapped[2]),
-                    "img0000",
-                    f"img{i+1:04}",
-                    1,
-                    0
-                )
+        self.homographies = [self.generate_homography() for _ in range(len(self.backgrounds))]
 
     def generate_homography(self) -> np.ndarray:
         """
@@ -178,3 +145,87 @@ class BlobinatorDataset(torch.utils.data.IterableDataset):
             return mapped_location, new_scale, new_rotation.item()
 
         return list(map(map_keypoint, self.keypoints))
+
+class BlobinatorTrainDataset(BlobinatorDataset):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+    def __getitem__(self, index):
+        background = self.backgrounds[index // len(self.keypoints)]
+        transform = self.homographies[index // len(self.keypoints)]
+        mapped_image = self.map_blobs(background, transform)
+        mapped_keypoints = self.map_keypoints(transform)
+        k = self.keypoints[index % len(self.keypoints)]
+        k_mapped = mapped_keypoints[index % len(self.keypoints)]
+        # TODO: Normalize
+        normalized_k = k
+        normalized_k_mapped = k_mapped
+        return (
+            {
+                "img": self.blob_sheet,
+                "padLeft": self.blob_sheet_pad_left,
+                "padUp": self.blob_sheet_pad_up
+            },
+            {
+                "img": mapped_image,
+                "padLeft": 0,
+                "padUp": 0
+            },
+            (k[0], k[1], k[2]),
+            (k_mapped[0], k_mapped[1], k_mapped[2]),
+            "img0000",
+            f"img{(index % 4)+1:04}",
+            1.0,
+            0.0,
+        )
+        
+    def __len__(self):
+        return len(self.backgrounds) * len(self.keypoints)
+    
+    def get_pairs(self, _):
+        # Do nothing for now. This method could load new background images or so.
+        pass
+
+
+class BlobinatorTestDataset(BlobinatorDataset):
+    def __init__(self,cfg):
+        super().__init__(cfg)
+
+    def __getitem__(self, index):
+        background = self.backgrounds[index // (len(self.keypoints) ** 2)]
+        transform = self.homographies[index // (len(self.keypoints) ** 2)]
+        mapped_image = self.map_blobs(background, transform)
+        mapped_keypoints = self.map_keypoints(transform)
+        keypoint_1_idx = index % (len(self.keypoints) ** 2) // len(self.keypoints)
+        keypoint_2_idx = index % len(self.keypoints)
+        k = self.keypoints[keypoint_1_idx]
+        k_mapped = mapped_keypoints[keypoint_2_idx]
+        # TODO: Normalize
+        normalized_k = k
+        normalized_k_mapped = k_mapped
+        return (
+            {
+                "img": self.blob_sheet,
+                "padLeft": self.blob_sheet_pad_left,
+                "padUp": self.blob_sheet_pad_up
+            },
+            {
+                "img": mapped_image,
+                "padLeft": 0,
+                "padUp": 0
+            },
+            (k[0], k[1], k[2]),
+            (k_mapped[0], k_mapped[1], k_mapped[2]),
+            "img0000",
+            f"img{(index % 4)+1:04}",
+            (k[0], k[1], k[2]),
+            (k_mapped[0], k_mapped[1], k_mapped[2]),
+            1.0,
+            1,
+            0,
+            1 if keypoint_1_idx == keypoint_2_idx else 0
+        )
+
+        
+    def __len__(self):
+        return len(self.backgrounds) * len(self.keypoints) * len(self.keypoints)
