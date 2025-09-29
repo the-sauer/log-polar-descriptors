@@ -110,6 +110,12 @@ class BlobinatorDataset(torch.utils.data.Dataset):
         )
         homography = cv.getPerspectiveTransform(unit_points, transformed_points)
         return homography
+    
+    def normalize_keypoint(self, keypoint, into):
+        loc, scale, rotation = keypoint
+        normalized_x = 2 * loc[0] / into[0] - 1
+        normalized_y = 2 * loc[1] / into[1] - 1
+        return np.array([normalized_x, normalized_y]), scale, rotation
 
     def map_blobs(self, background, homography):
         """
@@ -158,8 +164,8 @@ class BlobinatorTrainDataset(BlobinatorDataset):
         k = self.keypoints[index % len(self.keypoints)]
         k_mapped = mapped_keypoints[index % len(self.keypoints)]
         # TODO: Normalize
-        normalized_k = k
-        normalized_k_mapped = k_mapped
+        normalized_k = self.normalize_keypoint(k, into=(self.cfg.TRAINING.PAD_TO, self.cfg.TRAINING.PAD_TO))
+        normalized_k_mapped = self.normalize_keypoint(k_mapped, into=(self.cfg.TRAINING.PAD_TO, self.cfg.TRAINING.PAD_TO))
         return (
             {
                 "img": self.blob_sheet,
@@ -171,8 +177,8 @@ class BlobinatorTrainDataset(BlobinatorDataset):
                 "padLeft": 0,
                 "padUp": 0
             },
-            (k[0], k[1], k[2]),
-            (k_mapped[0], k_mapped[1], k_mapped[2]),
+            normalized_k,
+            normalized_k_mapped,
             "img0000",
             f"img{(index % 4)+1:04}",
             1.0,
@@ -201,8 +207,8 @@ class BlobinatorTestDataset(BlobinatorDataset):
         k = self.keypoints[keypoint_1_idx]
         k_mapped = mapped_keypoints[keypoint_2_idx]
         # TODO: Normalize
-        normalized_k = k
-        normalized_k_mapped = k_mapped
+        normalized_k = self.normalize_keypoint(k, into=(self.cfg.TRAINING.PAD_TO, self.cfg.TRAINING.PAD_TO))
+        normalized_k_mapped = self.normalize_keypoint(k_mapped, into=(self.cfg.TRAINING.PAD_TO, self.cfg.TRAINING.PAD_TO))
         return (
             {
                 "img": self.blob_sheet,
@@ -214,18 +220,17 @@ class BlobinatorTestDataset(BlobinatorDataset):
                 "padLeft": 0,
                 "padUp": 0
             },
-            (k[0], k[1], k[2]),
-            (k_mapped[0], k_mapped[1], k_mapped[2]),
+            normalized_k,
+            normalized_k_mapped,
             "img0000",
             f"img{(index % 4)+1:04}",
-            (k[0], k[1], k[2]),
-            (k_mapped[0], k_mapped[1], k_mapped[2]),
+            k,
+            k_mapped,
             1.0,
             1,
             0,
             1 if keypoint_1_idx == keypoint_2_idx else 0
         )
-
         
     def __len__(self):
         return len(self.backgrounds) * len(self.keypoints) * len(self.keypoints)
