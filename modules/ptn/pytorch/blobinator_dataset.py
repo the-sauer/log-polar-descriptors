@@ -70,6 +70,7 @@ class BlobinatorDataset(torch.utils.data.Dataset):
         - `MAX_WIGGLE`: The amount points can be wiggled in the x and y direction. This value is a fraction of the
             shorter sidelength of the blobsheet.
         """
+        # TODO: Use superpoints
         scale = np.random.uniform(self.cfg.BLOBINATOR.MIN_SCALE, self.cfg.BLOBINATOR.MAX_SCALE)
         rotation = np.random.uniform(-self.cfg.BLOBINATOR.MAX_ROTATION, self.cfg.BLOBINATOR.MAX_ROTATION) * np.pi / 180
         translation_x = np.random.uniform(
