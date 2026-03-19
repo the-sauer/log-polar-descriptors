@@ -179,7 +179,7 @@ def get_patch(img: torch.Tensor, A: torch.Tensor, cfg, sigma_cutoff=1.0, psf=Non
     try:
         device = img.device
         patch_size = resolution
-        PSF = psf if psf is not None else cfg.BLOBINATOR.PATCH_SCALE_FACTOR
+        PSF = psf if psf is not None else cfg.SCALE
         oversampling_factor = 4
         P = oversampling_factor * patch_size
         *_, Hs, Ws = img.shape

@@ -1,0 +1,17 @@
+SCALE: 96
+INPUT:
+  IMAGE_SIZE: 64
+TRAINING:
+  BATCH_SIZE: 20000
+  NUM_WORKERS: 2
+  LOSS: "supcon"
+  RESUME: "/data/models/pretrained/scale_96_res_64_synthetic/model_checkpoint_49.pth"
+  START_EPOCH: 50
+  EPOCHS: 70
+TEST:
+  TEST_BATCH_SIZE: 20000
+  EVAL_INTERVAL: 5
+LOGGING:
+  LOG_DIR: '/data/logs/'
+  MODEL_DIR: '/data/models/'
+  IMGS_DIR: '/data/images/'

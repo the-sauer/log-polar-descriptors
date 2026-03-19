@@ -40,17 +40,13 @@ def main():
                         config.TRAINING.BATCH_SIZE = 800
                     elif resolution == 128:
                         config.TRAINING.BATCH_SIZE = 200
-                    config.TRAINING.EXPERIMENT_NAME = experiment_name
-                    config.TRAINING.SCALE = scale
-                    config.TEST.SCALE = scale
-                    config.BLOBINATOR.PATCH_SCALE_FACTOR = scale
+                    config.EXPERIMENT_NAME = experiment_name
+                    config.SCALE = scale
                     config.INPUT.IMAGE_SIZE = resolution
-                    config.TEST.IMAGE_SIZE = resolution
-                    config.TRAINING.IMAGE_SIZE = resolution
                     config.TRAINING.OPTIMIZER = "sgd"
 
-                    config.TRAINING.EXPERIMENT_NAME = f"{experiment_name}_easy"
-                    config.BLOBINATOR.DATASET_PATH = "./data/datasets/new/easy"
+                    config.EXPERIMENT_NAME = f"{experiment_name}_easy"
+                    config.DATASET_PATH = "./data/datasets/new/easy"
                     config.TRAINING.EPOCHS = 50
 
                     config.SLIM = slim
@@ -68,8 +64,8 @@ def main():
                         config.LOGGING.LOG_DIR = os.path.join('data/logs/', datetime.today().strftime('%Y_%m_%d'), "matrix_train")
                         config.LOGGING.MODEL_DIR = os.path.join('data/models/', datetime.today().strftime('%Y_%m_%d'), "matrix_train")
                         config.LOGGING.IMGS_DIR = os.path.join('data/images/', datetime.today().strftime('%Y_%m_%d'), "matrix_train")
-                        config.TRAINING.EXPERIMENT_NAME = f"{experiment_name}_real"
-                        config.BLOBINATOR.DATASET_PATH = "./data/datasets/new/real"
+                        config.EXPERIMENT_NAME = f"{experiment_name}_real"
+                        config.DATASET_PATH = "./data/datasets/new/real"
                         config.TRAINING.EPOCHS = 200
                         config.TRAINING.RESUME = os.path.join(
                             config.LOGGING.MODEL_DIR,

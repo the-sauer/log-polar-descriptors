@@ -60,12 +60,12 @@ def create_train_loader(cfg):
         'num_workers': cfg.TRAINING.NUM_WORKERS,
         'pin_memory': cfg.TRAINING.PIN_MEMORY
     } if not cfg.TRAINING.NO_CUDA else {}
-    if os.path.splitext(cfg.BLOBINATOR.DATASET_PATH)[1] == ".tracks":
-        transformer_dataset = BlobTrackData(cfg.BLOBINATOR.DATASET_PATH, sequences=cfg.TRAINING.BOARDS, include_untracked=True)
-    elif os.path.isdir(os.path.join(cfg.BLOBINATOR.DATASET_PATH, "training")):
-        transformer_dataset = BlobinatorTrainingData(cfg, os.path.join(cfg.BLOBINATOR.DATASET_PATH, "training"))
+    if os.path.splitext(cfg.DATASET_PATH)[1] == ".tracks":
+        transformer_dataset = BlobTrackData(cfg.DATASET_PATH, sequences=cfg.TRAINING.BOARDS, include_untracked=False)
+    elif os.path.isdir(os.path.join(cfg.DATASET_PATH, "training")):
+        transformer_dataset = BlobinatorTrainingData(cfg, os.path.join(cfg.DATASET_PATH, "training"))
     else:
-        raise ValueError(f"Training data not found at {os.path.join(cfg.BLOBINATOR.DATASET_PATH)}")
+        raise ValueError(f"Training data not found at {os.path.join(cfg.DATASET_PATH)}")
     # transformer_dataset.preprocess()
     train_loader = torch.utils.data.DataLoader(
         transformer_dataset,
@@ -83,40 +83,40 @@ def create_test_loaders(cfg):
         'pin_memory': cfg.TRAINING.PIN_MEMORY
     } if not cfg.TRAINING.NO_CUDA else {}
 
-    if os.path.isdir(os.path.join(cfg.BLOBINATOR.DATASET_PATH, "validation")):
+    if os.path.isdir(os.path.join(cfg.DATASET_PATH, "validation")):
         val_loaders = [{
             'name':
             'duplicated_blobs_validation',
             'dataloader':
             torch.utils.data.DataLoader(
-                BlobinatorValidationPreBatchedData(cfg, os.path.join(cfg.BLOBINATOR.DATASET_PATH,  "validation")),
+                BlobinatorValidationPreBatchedData(cfg, os.path.join(cfg.DATASET_PATH,  "validation")),
                 batch_size=None,
                 shuffle=True,
                 **kwargs
             )
-        } if os.path.basename(cfg.BLOBINATOR.DATASET_PATH) == "real" else {
+        } if os.path.basename(cfg.DATASET_PATH) == "real" else {
             'name':
             'no_duplicated_blobs_validation',
             'dataloader':
             torch.utils.data.DataLoader(
-                BlobinatorValidationData(cfg, os.path.join(cfg.BLOBINATOR.DATASET_PATH,  "validation")),
+                BlobinatorValidationData(cfg, os.path.join(cfg.DATASET_PATH,  "validation")),
                 batch_size=cfg.TEST.TEST_BATCH_SIZE,
                 shuffle=True,
                 **kwargs
             )
         }]
-    elif os.path.splitext(cfg.BLOBINATOR.DATASET_PATH)[1] == ".tracks":
+    elif os.path.splitext(cfg.DATASET_PATH)[1] == ".tracks":
         val_loaders = [{
             "name": "track_validation",
             "dataloader": torch.utils.data.DataLoader(
-                BlobTrackData(cfg.BLOBINATOR.DATASET_PATH, sequences=cfg.VALIDATION.BOARDS, include_untracked=True),
+                BlobTrackData(cfg.DATASET_PATH, sequences=cfg.VALIDATION.BOARDS, include_untracked=False),
                 batch_size=cfg.TEST.TEST_BATCH_SIZE,
                 shuffle=True,
                 **kwargs
             )
         }]
     else:
-        raise ValueError(f"Validation data not found at {os.path.join(cfg.BLOBINATOR.DATASET_PATH)}")
+        raise ValueError(f"Validation data not found at {os.path.join(cfg.DATASET_PATH)}")
 
     test_loaders = None
     return val_loaders, test_loaders
@@ -503,7 +503,7 @@ def run_training(cfg):
     torch.manual_seed(cfg.TRAINING.SEED)
     np.random.seed(cfg.TRAINING.SEED)
 
-    model = HardNet(patch_size=cfg.TRAINING.IMAGE_SIZE, slim=cfg.SLIM, shallow=cfg.SHALLOW)
+    model = HardNet(patch_size=cfg.INPUT.IMAGE_SIZE, slim=cfg.SLIM, shallow=cfg.SHALLOW)
     logger, file_logger = None, None
 
     if cfg.LOGGING.ENABLE_LOGGING:
@@ -577,11 +577,11 @@ def create_logging_directories(cfg):
 
     # add experiment name to path
     cfg.LOGGING.LOG_DIR = os.path.join(cfg.LOGGING.LOG_DIR,
-                                       cfg.TRAINING.EXPERIMENT_NAME)
+                                       cfg.EXPERIMENT_NAME)
     cfg.LOGGING.MODEL_DIR = os.path.join(cfg.LOGGING.MODEL_DIR,
-                                         cfg.TRAINING.EXPERIMENT_NAME)
+                                         cfg.EXPERIMENT_NAME)
     cfg.LOGGING.IMGS_DIR = os.path.join(cfg.LOGGING.IMGS_DIR,
-                                        cfg.TRAINING.EXPERIMENT_NAME)
+                                        cfg.EXPERIMENT_NAME)
 
     log_directories = [
         cfg.LOGGING.LOG_DIR, cfg.LOGGING.MODEL_DIR, cfg.LOGGING.IMGS_DIR
