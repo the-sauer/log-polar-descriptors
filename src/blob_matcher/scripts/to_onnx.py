@@ -36,8 +36,7 @@ if __name__ == "__main__":
     onnx_program = torch.onnx.export(
         model,
         args=example_inputs,
-        input_names=["patches"],
-        dynamic_shapes={"patches": (torch.export.dynamic_shapes.Dim.DYNAMIC, torch.export.dynamic_shapes.Dim.STATIC, torch.export.dynamic_shapes.Dim.STATIC, torch.export.dynamic_shapes.Dim.STATIC)},
+        dynamic_shapes=((torch.export.dynamic_shapes.Dim.DYNAMIC, torch.export.dynamic_shapes.Dim.STATIC, torch.export.dynamic_shapes.Dim.STATIC, torch.export.dynamic_shapes.Dim.STATIC),),
         dynamo=True
     )
     onnx_program.save(f"{os.path.splitext(os.path.basename(args.weights))[0]}.onnx")
